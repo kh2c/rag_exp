@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+    volumes:
+      - ./.venv:/app/.venv
+      - ./src:/app/src
+      - ./main.py:/app/main.py
+    command: sh -c "uv sync && uv run python main.py"
+    depends_on:
+      - db
+    networks:
+      - rag-network
+
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - rag-network
+
+  adminer:
+    image: adminer:latest
+    ports:
+      - "8888:8080"
+    depends_on:
+      - db
+    networks:
+      - rag-network
+
+networks:
+  rag-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
