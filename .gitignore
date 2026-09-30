@@ -1,2 +1,4 @@
 .venv
 src/rag_exp/__pycache__
+.env
+sandbox/
