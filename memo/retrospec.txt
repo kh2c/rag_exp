@@ -11,3 +11,15 @@
 　・adminerを入れてみた
 　　・http://localhost:8888で入れない問題あり
 　　・hostname -I をwslで実行して http://{hostname結果}:8888だと入れた
+
+・githubにpushできなくてつまづく
+　・publicのリポジトリ持つの初めてでmainにはプルリクを介したマージが必要
+　・個人開発でめんどくさがって全部mainでやってたのが原因
+　・IDE上だとわからずAIに聞いてもなんかよく分からん解答
+　・git pushをCLIで打った時のエラーメッセージで気づいた
+
+・password=postgresをどうにかしたい
+　・.env.example使う方法を前見たので実施
+　・docker-composeで.envを認識してくれる
+　・sudo docker compose down だとボリュームにデータ残ってパスワード変更が更新されていない
+　・sudo docker compose down -v でボリューム消してupで解決！
