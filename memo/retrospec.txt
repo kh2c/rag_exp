@@ -23,3 +23,18 @@
 　・docker-composeで.envを認識してくれる
 　・sudo docker compose down だとボリュームにデータ残ってパスワード変更が更新されていない
 　・sudo docker compose down -v でボリューム消してupで解決！
+
+・embeddingモデル検討
+　・英語でも苦じゃない、wsl側のGPU設定が面倒なのでCPUで動くモデルを調査
+　・all-MiniLM-L6-v2 がよさげだったので試用
+　　・hugging-face公式が出してるモデルなので安全性は高
+
+・テスト結果
+query: "where is the orange?"
+-----
+num1 is: orange is on the desk, 0.6715460419654846
+num2 is: taro ate apple yesterday, 0.24732601642608643
+num3 is: uv is recommended in this project, 0.05991227924823761
+　・orangeが同一だから近い可能性はあり ただ意図通りの結果になった
+　・フルーツ関連にnum2を変えて実施（上記は変更後）して全く関係ないnum3より差が出ること確認
+

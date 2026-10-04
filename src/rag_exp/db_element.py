@@ -1,5 +1,5 @@
 import numpy as np
-from rag_exp.dummy_embed_model import embedding_stub, str2seednum
+from sentence_transformers import SentenceTransformer
 
 class DbElement:
     """
@@ -10,7 +10,7 @@ class DbElement:
 
     def __init__(self, text: str):
         self.text = text
-        self.vector = embedding_stub(seed=str2seednum(text))
+        self.vector = None  # Initialize with None
 
     def to_db_format(self) -> list[float]:
-        return self.vector.tolist()
+        return self.vector.tolist() if self.vector is not None else []

@@ -1,1 +1,1 @@
-CONNECT_TO_API = False
+# CONNECT_TO_API = False  # Deprecated: sentence-transformers is now used locally
