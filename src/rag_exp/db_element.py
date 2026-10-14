@@ -8,9 +8,9 @@ class DbElement:
     text: str
     vector: np.ndarray
 
-    def __init__(self, text: str):
+    def __init__(self, text: str, vector: np.ndarray = None):
         self.text = text
-        self.vector = None  # Initialize with None
+        self.vector = vector  # Initialize with None or provided vector
 
     def to_db_format(self) -> list[float]:
         return self.vector.tolist() if self.vector is not None else []

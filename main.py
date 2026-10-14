@@ -1,45 +1,67 @@
-import numpy as np
-from rag_exp import DbElement
-from sentence_transformers import SentenceTransformer
+import argparse
+import sys
+from rag_exp import Vectorizer, DBManager
 
-def cvt_txt2vec(text: str, model: SentenceTransformer) -> np.ndarray:
-    """
-    Convert text to vector using sentence-transformers model
-    """
-    embedding = model.encode(text)
-    return np.array(embedding)
 
-def calc_similarity(vec1: np.ndarray, vec2: np.ndarray) -> float:
-    """
-    Calculate cosine similarity between two vectors
-    """
-    vec1 = np.squeeze(vec1)
-    vec2 = np.squeeze(vec2)
-    return np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))
+def main():
+    parser = argparse.ArgumentParser(description="RAG Experiment CLI")
+    subparsers = parser.add_subparsers(dest="command", help="Available commands")
+    
+    # vectorize subcommand
+    vectorize_parser = subparsers.add_parser("vectorize", help="Vectorize text and store in DB")
+    vectorize_parser.add_argument("text", help="Text to vectorize and store")
+    vectorize_parser.add_argument("--model", default="sentence-transformers/all-MiniLM-L6-v2", 
+                                  help="Sentence transformer model name")
+    
+    # query subcommand
+    query_parser = subparsers.add_parser("query", help="Search for similar vectors in DB")
+    query_parser.add_argument("query", help="Query text to search")
+    query_parser.add_argument("--top-k", type=int, default=3, help="Number of results to return")
+    query_parser.add_argument("--model", default="sentence-transformers/all-MiniLM-L6-v2",
+                              help="Sentence transformer model name")
+    
+    # clear subcommand
+    clear_parser = subparsers.add_parser("clear", help="Clear all vectors from DB")
+    
+    # list subcommand
+    list_parser = subparsers.add_parser("list", help="List all vectors in DB")
+    
+    args = parser.parse_args()
+    
+    if args.command is None:
+        parser.print_help()
+        sys.exit(1)
+    
+    vectorizer = Vectorizer(model_name=args.model)
+    db_manager = DBManager()
+    
+    if args.command == "vectorize":
+        element = db_manager.add_vector(args.text, vectorizer.text_to_vector(args.text))
+        print(f"Stored vector for: '{element.text}'")
+    
+    elif args.command == "query":
+        query_vector = vectorizer.text_to_vector(args.query)
+        results = db_manager.search_top_k(query_vector, k=args.top_k)
+        
+        print(f"\nQuery: '{args.query}'")
+        print(f"Top {len(results)} results:")
+        for i, (text, similarity) in enumerate(results, 1):
+            print(f"{i}. {text} (similarity: {similarity:.4f})")
+    
+    elif args.command == "clear":
+        db_manager.clear()
+        print("Database cleared")
+    
+    elif args.command == "list":
+        elements = db_manager.get_all()
+        if not elements:
+            print("Database is empty")
+        else:
+            print(f"Database contains {len(elements)} entries:")
+            for i, element in enumerate(elements, 1):
+                vector_status = "stored" if element.vector is not None else "no vector"
+                print(f"{i}. {element.text} ({vector_status})")
+
 
 if __name__ == "__main__":
-    TOP_K_PICK = 3
-
-    knowledge1 = DbElement(text="orange is on the desk")
-    knowledge2 = DbElement(text="taro ate apple yesterday")
-    knowledge3 = DbElement(text="uv is recommended in this project")
-    dummy_db = [knowledge1, knowledge2, knowledge3]
-
-    model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
-    for i in range(len(dummy_db)):
-        dummy_db[i].vector = cvt_txt2vec(dummy_db[i].text, model)
-
-    question = "where is the orange?"
-    query = model.encode(question)
-
-    top_k_tmp = []
-    for db_element in dummy_db:
-        similarity = calc_similarity(query, db_element.vector)
-        top_k_tmp.append([db_element.text, similarity])
-        print(f"Similarity between query and '{db_element.text}': {similarity}")
-    print("-----------")
-    print("calc top_k")
-    
-    top_k_tmp.sort(key=lambda x: x[1], reverse=True)
-    for i in range(TOP_K_PICK):
-        print(f"num{i+1} is: {top_k_tmp[i][0]}, {top_k_tmp[i][1]}")
+    main()

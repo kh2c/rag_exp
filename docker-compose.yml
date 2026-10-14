@@ -17,14 +17,16 @@ services:
       - ./main.py:/app/main.py
       - ./pyproject.toml:/app/pyproject.toml
       - ./uv.lock:/app/uv.lock
+      - ./sql:/app/sql
     command: sh -c "uv sync && uv run python main.py"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - rag-network
 
   db:
-    image: postgres:15
+    image: pgvector/pgvector:pg15
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -33,6 +35,12 @@ services:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - rag-network
 
